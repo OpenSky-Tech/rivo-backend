@@ -11,6 +11,7 @@ import * as http from "http";
 import helmet from "helmet";
 import cors from "cors";
 import { errorHandler } from "./middleware/errorhandler.middleware";
+import { notFound } from "./errors/http.error";
 
 const server = new InversifyExpressServer(container);
 
@@ -26,6 +27,11 @@ server.setConfig((app) => {
 });
 
 server.setErrorConfig((app) => {
+  // Catch 404 and forward to error handler
+  app.use((req, res, next) => {
+    next(notFound(`Route not found: ${req.method} ${req.originalUrl}`));
+  });
+
   app.use(errorHandler);
 });
 
