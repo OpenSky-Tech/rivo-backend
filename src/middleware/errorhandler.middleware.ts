@@ -1,10 +1,19 @@
-import type { ErrorRequestHandler } from "express";
+import type { ErrorRequestHandler, Response } from "express";
 import { ZodError } from "zod";
 import { ApiError } from "../errors/api.error";
 import { internalError } from "../errors/http.error";
+import { toIssueList } from "../util/validation-error.util";
 
-function isPgError(err: any): boolean {
-  return typeof err?.code === "string" && typeof err?.message === "string";
+function sendApiError(res: Response, err: ApiError) {
+  return res.status(err.code).json({
+    code: err.code,
+    success: false,
+    error: {
+      type: err.type,
+      message: err.expose ? err.message : "Internal server error",
+      ...(err.details ? { details: err.details } : {}),
+    },
+  });
 }
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
@@ -15,20 +24,18 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
   // 2. Custom App errors
   if (err instanceof ApiError) {
-    return res.status(err.code).json({
-      code: err.code,
-      success: false,
-      error: {
-        type: err.type,
-        message: err.expose ? err.message : "Internal server error",
-        ...(err.details ? { details: err.details } : {}),
-      },
-    });
+    return sendApiError(res, err);
   }
 
   // 3. Handle Malformed JSON (thrown by express.json() body parser)
-  if (err instanceof SyntaxError && "status" in err && err.status === 400 && "body" in err) {
+  if (
+    err instanceof SyntaxError &&
+    "status" in err &&
+    err.status === 400 &&
+    "body" in err
+  ) {
     return res.status(400).json({
+      code: 400,
       success: false,
       error: {
         type: "BAD_REQUEST",
@@ -40,49 +47,19 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   // 4. Catch unexpected Zod Errors (if parsed outside of validate middleware)
   if (err instanceof ZodError) {
     return res.status(400).json({
+      code: 400,
       success: false,
       error: {
         type: "VALIDATION_ERROR",
-        message: "Validation error",
-        details: err.issues,
+        message: "Request Validation failed",
+        details: toIssueList("body", err.issues),
       },
     });
   }
 
-  // 5. Postgres DB errors
-  // const isDevelopment = process.env.NODE_ENV !== "production";
-
-  // if (isPgError(err)) {
-  //   if (err.code === "23505") {
-  //     return res.status(409).json({
-  //       success: false,
-  //       error: {
-  //         type: "CONFLICT", // Changed BAD_REQUEST to CONFLICT
-  //         message: "Duplicate value",
-  //         details: isDevelopment ? {
-  //           constraint: err.constraint,
-  //           detail: err.detail,
-  //         } : undefined,
-  //       },
-  //     });
-  //   }
-
-  //   if (err.code === "22P02") {
-  //     return res.status(400).json({
-  //       success: false,
-  //       error: {
-  //         type: "BAD_REQUEST",
-  //         message: "Invalid input format",
-  //         details: isDevelopment ? {
-  //           detail: err.detail,
-  //         } : undefined,
-  //       },
-  //     });
-  //   }
-  // }
-
   // 6. Unknown errors. Add more context to logs.
   console.error(`[Unhandled Error] ${req.method} ${req.originalUrl}:`, err);
 
-  return internalError("Internal server error");
+  const appError = internalError("Internal server error")
+  return sendApiError(res, appError);
 };

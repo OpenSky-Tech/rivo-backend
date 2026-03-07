@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { z } from "zod";
 import { validationError } from "../errors/http.error";
+import { toIssueList, ValidationDetail } from "../util/validation-error.util";
 
 type AsySchema<T = unknown> = z.ZodType<T>;
 
@@ -10,25 +11,11 @@ type ValidateSchema<B = unknown, Q = unknown, P = unknown> = {
   params?: AsySchema<P>;
 };
 
-function toIssueList(part: "body" | "query" | "params", issues: z.ZodIssue[]) {
-  return issues.map((i) => ({
-    part,
-    path: [part, ...i.path].join("."), // like -> body.productid, query.something
-    message: i.message,
-    code: i.code,
-  }));
-}
-
 export function validate<B = unknown, Q = unknown, P = unknown>(
   schemas: ValidateSchema<B, Q, P>,
 ): RequestHandler {
   return (req, res, next) => {
-    const allIssues: Array<{
-      part: "body" | "query" | "params";
-      path: string;
-      message: string;
-      code: string;
-    }> = [];
+    const allIssues: ValidationDetail[] = [];
 
     //body
     if (schemas.body) {
@@ -52,7 +39,7 @@ export function validate<B = unknown, Q = unknown, P = unknown>(
     }
 
     if (allIssues.length > 0) {
-      return next(validationError("Validation error", allIssues));
+      return next(validationError("Request Validation failed", allIssues));
     }
 
     return next();
