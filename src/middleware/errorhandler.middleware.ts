@@ -51,7 +51,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       success: false,
       error: {
         type: "VALIDATION_ERROR",
-        message: "Request Validation failed",
+        message: "Request validation failed",
         details: toIssueList("body", err.issues),
       },
     });

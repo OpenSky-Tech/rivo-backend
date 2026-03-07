@@ -39,7 +39,7 @@ export function validate<B = unknown, Q = unknown, P = unknown>(
     }
 
     if (allIssues.length > 0) {
-      return next(validationError("Request Validation failed", allIssues));
+      return next(validationError("Request validation failed", allIssues));
     }
 
     return next();
