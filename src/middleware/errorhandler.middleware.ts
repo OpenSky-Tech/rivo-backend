@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { ApiError } from "../errors/api.error";
+import { internalError } from "../errors/http.error";
 
 function isPgError(err: any): boolean {
   return typeof err?.code === "string" && typeof err?.message === "string";
@@ -15,6 +16,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   // 2. Custom App errors
   if (err instanceof ApiError) {
     return res.status(err.code).json({
+      code: err.code,
       success: false,
       error: {
         type: err.type,
@@ -48,45 +50,39 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   // 5. Postgres DB errors
-  const isDevelopment = process.env.NODE_ENV !== "production";
+  // const isDevelopment = process.env.NODE_ENV !== "production";
 
-  if (isPgError(err)) {
-    if (err.code === "23505") {
-      return res.status(409).json({
-        success: false,
-        error: {
-          type: "CONFLICT", // Changed BAD_REQUEST to CONFLICT
-          message: "Duplicate value",
-          details: isDevelopment ? {
-            constraint: err.constraint,
-            detail: err.detail,
-          } : undefined,
-        },
-      });
-    }
+  // if (isPgError(err)) {
+  //   if (err.code === "23505") {
+  //     return res.status(409).json({
+  //       success: false,
+  //       error: {
+  //         type: "CONFLICT", // Changed BAD_REQUEST to CONFLICT
+  //         message: "Duplicate value",
+  //         details: isDevelopment ? {
+  //           constraint: err.constraint,
+  //           detail: err.detail,
+  //         } : undefined,
+  //       },
+  //     });
+  //   }
 
-    if (err.code === "22P02") {
-      return res.status(400).json({
-        success: false,
-        error: {
-          type: "BAD_REQUEST",
-          message: "Invalid input format",
-          details: isDevelopment ? {
-            detail: err.detail,
-          } : undefined,
-        },
-      });
-    }
-  }
+  //   if (err.code === "22P02") {
+  //     return res.status(400).json({
+  //       success: false,
+  //       error: {
+  //         type: "BAD_REQUEST",
+  //         message: "Invalid input format",
+  //         details: isDevelopment ? {
+  //           detail: err.detail,
+  //         } : undefined,
+  //       },
+  //     });
+  //   }
+  // }
 
   // 6. Unknown errors. Add more context to logs.
   console.error(`[Unhandled Error] ${req.method} ${req.originalUrl}:`, err);
 
-  return res.status(500).json({
-    success: false,
-    error: {
-      type: "INTERNAL_ERROR",
-      message: "Internal server error",
-    },
-  });
+  return internalError("Internal server error");
 };
