@@ -34,6 +34,13 @@ function formatIssueMessage(field: string, issue: z.ZodIssue): string {
     return `${label} is required`;
   }
 
+  if (
+    issue.code === z.ZodIssueCode.invalid_type &&
+    issue.message.includes("received NaN")
+  ) {
+    return `${label} is required`;
+  }
+
   return issue.message;
 }
 

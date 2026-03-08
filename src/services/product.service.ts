@@ -12,8 +12,6 @@ export class ProductService {
   ) {}
 
   public async getProducts(body: any) {
-    // if (!body) {
-    // }
 
     const { orgid, domainid } = body;
 
@@ -21,7 +19,6 @@ export class ProductService {
 
     const { list, count } = await this.repo.getProducts({});
 
-    //some action
 
     return { list, count };
   }

@@ -32,7 +32,7 @@ export class ProductRepo {
                 ) FILTER (WHERE v.variant_id IS NOT NULL),
                  '[]'::jsonb
             ) AS variants
-            FROM products p
+            FROM products
             LEFT JOIN productvariants v on v.product_id = p.product_id
             ${where}
             GROUP BY p.product_id
