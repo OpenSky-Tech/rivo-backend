@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../types";
 import { ProductRepo } from "../repositories/product.repo";
 import { notFound } from "../errors/http.error";
-import z from "zod";
+import z, { string } from "zod";
 
 @injectable()
 export class ProductService {
@@ -16,9 +16,16 @@ export class ProductService {
     const limit = Number(query.limit) || 5;
     const page = Number(query.page) || 1;
     const offset = (page - 1) * limit;
+
     const search = (query.search || "").trim();
 
-    const { list, total } = await this.repo.getProducts({ limit, offset, search });
+    const { limit: _l, offset: _o, search: _s, page: _p, ...rawAttrs } = query;
+
+    const attrs = Object.fromEntries(
+      Object.entries(rawAttrs).map(([key, value]) => [key, this.normalizaAttrValue(value)])
+    );
+
+    const { list, total } = await this.repo.getProducts({ limit, offset, search, attrs });
 
 
     return { list, limit, page, total: Number(total) };
@@ -62,5 +69,16 @@ export class ProductService {
     }
 
     await this.repo.deleteProduct(id);
+  }
+
+  private normalizaAttrValue(value: any) {
+    if (typeof value !== "string") return value;
+
+    if (value.toLowerCase() === "true") return true;
+    if (value.toLowerCase() === "false") return false;
+
+    if (!isNaN(Number(value)) && value.trim() !== "") return Number(value);
+
+    return value;
   }
 }

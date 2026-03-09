@@ -7,7 +7,7 @@ export class ProductRepo {
   constructor(@inject(TYPES.DbPool) private db: Pool) { }
 
   public async getProducts(params: any) {
-    const { limit, offset, search } = params;
+    const { limit, offset, search, attrs } = params;
 
     let where = "WHERE 1=1";
     let values = [];
@@ -16,6 +16,12 @@ export class ProductRepo {
     if (search) {
       where += ` AND p.name ILIKE $${index}`;
       values.push(`%${search}%`);
+      index++;
+    }
+
+    if (attrs && Object.keys(attrs).length > 0) {
+      where += ` AND v.attrs @> $${index}::jsonb`;
+      values.push(JSON.stringify(attrs));
       index++;
     }
 
