@@ -28,16 +28,16 @@ export class ProductRepo {
     const countQuery = {
       text: `
             SELECT
-            COUNT(*) as count
+            COUNT(DISTINCT p.id) as count
             FROM products p
             LEFT JOIN productvariants v on v.product_id = p.id
             ${where}
             `,
-      values: values,
+      values: [...values],
     };
 
     const countRes = await this.db.query(countQuery);
-    const count = countRes.rows[0].count;
+    const count = Number(countRes.rows[0].count);
 
     values.push(limit, offset);
     const limitIndex = index;
