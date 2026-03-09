@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import "./controllers"; //import controllers -> routes register
-import { container } from "./inversify.config"; // DI set up
+import { container } from "./config/inversify.config"; // DI set up
 
 import { InversifyExpressServer } from "inversify-express-utils";
 import express from "express";

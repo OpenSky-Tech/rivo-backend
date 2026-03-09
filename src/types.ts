@@ -2,6 +2,8 @@ export const TYPES = {
 
     DbPool: Symbol.for("DbPool"),
 
+    CacheService: Symbol.for("CacheService"),
+
     ProductRepo: Symbol.for("ProductRepo"),
     ProductService: Symbol.for("ProductService"),
 

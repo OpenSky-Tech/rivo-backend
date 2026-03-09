@@ -1,8 +1,9 @@
 import type { ErrorRequestHandler, Response } from "express";
-import { success, ZodError } from "zod";
+import { ZodError } from "zod";
 import { ApiError } from "../errors/api.error";
 import { internalError } from "../errors/http.error";
 import { toIssueList } from "../util/validation-error.util";
+import { table } from "node:console";
 
 function sendApiError(res: Response, err: ApiError) {
   return res.status(err.code).json({
@@ -16,8 +17,163 @@ function sendApiError(res: Response, err: ApiError) {
   });
 }
 
-function isPgError(err: any) {
-  return typeof err?.code === "string" && typeof err?.message === "string";
+type PgLikeError = Error & {
+  code?: string;
+  detail?: string;
+  constraint?: string;
+  column?: string;
+  table?: string;
+  schema?: string;
+  where?: string;
+};
+
+function isPgError(err: unknown): err is PgLikeError {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    typeof (err as PgLikeError).code === "string" &&
+    typeof (err as Error).message === "string"
+  );
+}
+
+function handlePgError(res: Response, err: PgLikeError) {
+  // unique_violation
+  if (err.code === "23505") {
+    return res.status(409).json({
+      code: 409,
+      success: false,
+      error: {
+        type: "CONFLICT",
+        message: "Duplicate value",
+        details: {
+          constraint: err.constraint,
+          detail: err.detail,
+        },
+      },
+    });
+  }
+
+  // foreign_key_violation
+  if (err.code === "23503") {
+    return res.status(400).json({
+      code: 400,
+      success: false,
+      error: {
+        type: "BAD_REQUEST",
+        message: "Referenced record does not exist",
+        details: {
+          constraint: err.constraint,
+          detail: err.detail,
+        },
+      },
+    });
+  }
+
+  // not_null_violation
+  if (err.code === "23502") {
+    return res.status(400).json({
+      code: 400,
+      success: false,
+      error: {
+        type: "BAD_REQUEST",
+        message: "Required database field is missing",
+        details: {
+          column: err.column,
+          detail: err.detail,
+        },
+      },
+    });
+  }
+
+  // invalid_text_representation
+  if (err.code === "22P02") {
+    return res.status(400).json({
+      code: 400,
+      success: false,
+      error: {
+        type: "BAD_REQUEST",
+        message: "Invalid input format",
+        details: {
+          detail: err.detail ?? err.message,
+        },
+      },
+    });
+  }
+
+  // check_violation
+  if (err.code === "23514") {
+    return res.status(400).json({
+      code: 400,
+      success: false,
+      error: {
+        type: "BAD_REQUEST",
+        message: "Database check constraint failed",
+        details: {
+          constraint: err.constraint,
+          detail: err.detail,
+        },
+      },
+    });
+  }
+
+  // string_data_right_truncation
+  if (err.code === "22001") {
+    return res.status(400).json({
+      code: 400,
+      success: false,
+      error: {
+        type: "BAD_REQUEST",
+        message: "Input value is too long",
+        details: {
+          detail: err.detail ?? err.message,
+        },
+      },
+    });
+  }
+
+  // numeric_value_out_of_range
+  if (err.code === "22003") {
+    return res.status(400).json({
+      code: 400,
+      success: false,
+      error: {
+        type: "BAD_REQUEST",
+        message: "Numeric value is out of range",
+        details: {
+          detail: err.detail ?? err.message,
+        },
+      },
+    });
+  }
+
+  // invalid_datetime_format
+  if (err.code === "22007") {
+    return res.status(400).json({
+      code: 400,
+      success: false,
+      error: {
+        type: "BAD_REQUEST",
+        message: "Invalid date/time format",
+        details: {
+          detail: err.detail ?? err.message,
+        },
+      },
+    });
+  }
+
+  // fallback for all other postgres errors
+  return res.status(500).json({
+    code: 500,
+    success: false,
+    error: {
+      type: "DATABASE_ERROR",
+      message: "Unexpected database error",
+      details: {
+        code: err.code,
+        detail: err.detail ?? err.message,
+      },
+    },
+  });
 }
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
@@ -62,82 +218,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   if (isPgError(err)) {
-    if (err.code === "23505") {
-      return res.status(409).json({
-        code: 409,
-        success: false,
-        error: {
-          type: "CONFLICT",
-          message: "Duplicate value",
-          detials: {
-            constraint: err.constraint,
-            detial: err.detail,
-          },
-        },
-      });
-    }
-
-    if (err.code === "23503") {
-      return res.status(400).json({
-        code: 400,
-        success: false,
-        error: {
-          type: "BAD_REQUEST",
-          message: "Referenced record does not exist",
-          details: {
-            constraint: err.constraint,
-            detail: err.detail,
-          },
-        },
-      });
-    }
-
-    // not-null violation
-    if (err.code === "23502") {
-      return res.status(400).json({
-        code: 400,
-        success: false,
-        error: {
-          type: "BAD_REQUEST",
-          message: "Required database field is missing",
-          details: {
-            column: err.column,
-            detail: err.detail,
-          },
-        },
-      });
-    }
-
-    // invalid text representation
-    if (err.code === "22P02") {
-      return res.status(400).json({
-        code: 400,
-        success: false,
-        error: {
-          type: "BAD_REQUEST",
-          message: "Invalid input format",
-          details: {
-            detail: err.detail,
-          },
-        },
-      });
-    }
-
-    // check constraint violation
-    if (err.code === "23514") {
-      return res.status(400).json({
-        code: 400,
-        success: false,
-        error: {
-          type: "BAD_REQUEST",
-          message: "Database check constraint failed",
-          details: {
-            constraint: err.constraint,
-            detail: err.detail,
-          },
-        },
-      });
-    }
+    return handlePgError(res, err);
   }
 
   // 6. Unknown errors. Add more context to logs.
