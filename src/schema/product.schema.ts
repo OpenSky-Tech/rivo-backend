@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createVariantSchema } from "./variant.schema";
 
-const productBaseSchema = z.object({
+const productCoreObject = z.object({
   name: z.string().trim().min(1, "Name is required"),
   basePrice: z.coerce.number().nonnegative(),
   inactive: z.coerce.boolean().default(false),
@@ -25,13 +25,12 @@ const validateVariants = (variants: any[], ctx: z.RefinementCtx) => {
   });
 };
 
-export const createProductSchema = productBaseSchema
-  .strict()
-  .superRefine((data, ctx) => validateVariants(data.variants, ctx));
+export const createProductSchema = productCoreObject.superRefine((data, ctx) =>
+  validateVariants(data.variants, ctx),
+);
 
-export const updateProductSchema = productBaseSchema
+export const updateProductSchema = productCoreObject
   .partial()
-  .strict()
   .superRefine((data, ctx) => {
     if (data.variants) {
       validateVariants(data.variants, ctx);
@@ -39,5 +38,7 @@ export const updateProductSchema = productBaseSchema
   });
 
 export const createBulkProductSchema = z.object({
-  products: z.array(createProductSchema).min(1, "Must provide at least 1 product")
-})
+  products: z
+    .array(createProductSchema)
+    .min(1, "Must provide at least 1 product"),
+});

@@ -48,17 +48,17 @@ export class ProductRepo {
             SELECT
             p.id as id,
             p.name as name,
-            p.base_price as baseprice,
-            p.inactive as isinactive,
-            p.created_at as createdat,
+            p.base_price::float8 as "basePrice",
+            p.inactive as inactive,
+            p.created_at as "createdAt",
             COALESCE(
                 jsonb_agg(
                     jsonb_build_object(
-                        'variantid', v.id,
+                        'variantId', v.id,
                         'sku', v.sku,
                         'barcode', v.barcode,
                         'stock', v.stock,
-                        'baseprice', v.base_price,
+                        'basePrice', v.base_price,
                         'attrs', v.attrs
                     )
                 ) FILTER (WHERE v.id IS NOT NULL),
@@ -89,16 +89,17 @@ export class ProductRepo {
             SELECT
             p.id as id,
             p.name as name,
-            p.base_price as baseprice,
-            p.inactive as isinactive,
+            p.base_price::float8 as "basePrice",
+            p.inactive as inactive,
+            p.created_at as "createdAt",
             COALESCE(
                 jsonb_agg(
                     jsonb_build_object(
-                        'variantid', v.id,
+                        'variantId', v.id,
                         'sku', v.sku,
                         'barcode', v.barcode,
                         'stock', v.stock,
-                        'baseprice', v.base_price,
+                        'basePrice', v.base_price,
                         'attrs', v.attrs
                     )
                 ) FILTER (WHERE v.id IS NOT NULL),
