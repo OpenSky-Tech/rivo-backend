@@ -13,7 +13,7 @@ import { ProductService } from "../services/product.service";
 import { Request, Response } from "express";
 import { AuthMiddle } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
-import { createProductSchema } from "../schema/product.schema";
+import { createBulkProductSchema, createProductSchema, updateProductSchema } from "../schema/product.schema";
 import z from "zod";
 import { created, deleted, ok, paginated, updated } from "../util/api-response.util";
 
@@ -58,11 +58,34 @@ export class ProductController {
     return created(res, {}, "Product created successfully");
   }
 
-  @httpPut("/update/:id")
+  @httpPost("/create-bulk", validate({ body: createBulkProductSchema }))
+  public async createBulk(
+    @request() req: Request,
+    @response() res: Response
+  ) {
+    const user = res.locals.user;
+
+    const dto = req.body as z.infer<typeof createBulkProductSchema>;
+
+    await this.service.createBulkProduct(dto.products);
+
+    return created(res, {}, "Multiple products created successfully")
+  }
+
+  @httpPost("/invalidate-cache")
+  public async invalidateCache(@request() req: Request, @response() res: Response) {
+    const user = res.locals.user;
+
+    await this.service.invalidateCache();
+
+    return ok(res, {}, "Cache invalidated successfully");
+  }
+
+  @httpPut("/update/:id", validate({ body: updateProductSchema }))
   public async updateProduct(@request() req: Request, @response() res: Response) {
     const user = res.locals.user;
     const params = req.params;
-    const body = req.body;
+    const body = req.body as z.infer<typeof updateProductSchema>;
 
     const updatedProduct = await this.service.updateProduct(params.id, body);
 

@@ -32,8 +32,14 @@ function isPgError(err: unknown): err is PgLikeError {
     typeof err === "object" &&
     err !== null &&
     typeof (err as PgLikeError).code === "string" &&
+    (err as PgLikeError).code!.length === 5 &&
     typeof (err as Error).message === "string"
   );
+}
+
+function isRedisError(err: unknown): err is Error {
+  return err instanceof Error &&
+    /redis|socket|ecconn|enotfound|timeout|auth|allowlist|url/i.test(err.message);
 }
 
 function handlePgError(res: Response, err: PgLikeError) {
@@ -213,6 +219,20 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
         type: "VALIDATION_ERROR",
         message: "Request validation failed",
         details: toIssueList("body", err.issues),
+      },
+    });
+  }
+
+  if (isRedisError(err)) {
+    return res.status(500).json({
+      code: 500,
+      success: false,
+      error: {
+        type: "REDIS_ERROR",
+        message: "Unexpected redis error",
+        details: {
+          detail: err.message,
+        },
       },
     });
   }
