@@ -8,6 +8,8 @@ import { AuthMiddle } from "../middleware/auth.middleware";
 // import { CacheService } from "../services/cache.service";
 import { ShopRepo } from "../repositories/shop.repo";
 import { ShopService } from "../services/shop.service";
+import { CategoryRepo } from "../repositories/category.repo";
+import { CategoryService } from "../services/category.service";
 // import { InvalidateCacheService } from "../services/invalidate_cache.service";
 
 export const container = new Container();
@@ -26,6 +28,7 @@ container.bind(AuthMiddle).toSelf().inSingletonScope(); //bind class
 //   .to(InvalidateCacheService)
 //   .inSingletonScope();
 
+//Product
 container
   .bind<ProductRepo>(TYPES.ProductRepo)
   .to(ProductRepo)
@@ -34,6 +37,8 @@ container
   .bind<ProductService>(TYPES.ProductService)
   .to(ProductService)
   .inSingletonScope();
+
+//Shop
 container
   .bind<ShopRepo>(TYPES.ShopRepo)
   .to(ShopRepo)
@@ -41,4 +46,14 @@ container
 container
   .bind<ShopService>(TYPES.ShopService)
   .to(ShopService)
+  .inSingletonScope();
+
+//Category
+container
+  .bind<CategoryRepo>(TYPES.CategoryRepo)
+  .to(CategoryRepo)
+  .inSingletonScope();
+container
+  .bind<CategoryService>(TYPES.CategoryService)
+  .to(CategoryService)
   .inSingletonScope();

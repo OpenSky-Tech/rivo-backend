@@ -10,5 +10,8 @@ export const TYPES = {
     ProductService: Symbol.for("ProductService"),
 
     ShopRepo: Symbol.for("ShopRepo"),
-    ShopService: Symbol.for("ShopService")
+    ShopService: Symbol.for("ShopService"),
+
+    CategoryRepo: Symbol.for("CategoryRepo"),
+    CategoryService: Symbol.for("CategoryService")
 }
