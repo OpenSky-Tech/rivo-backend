@@ -23,6 +23,8 @@ export class CategoryService {
 
         const search = (query.search || "").trim();
 
+        const shopid = (query.shopid);
+
         // let version = await this.cache.getString(CACHE_KEYS.SHOP_LIST_VERSION);
 
         // if (!version) {
@@ -38,7 +40,7 @@ export class CategoryService {
         //     return cached;
         // }
 
-        const { list, total } = await this.repo.getCategories({ limit, offset, search });
+        const { list, total } = await this.repo.getCategories({ limit, offset, search, shopid });
 
         const response = { list, limit, page, total: Number(total) };
 

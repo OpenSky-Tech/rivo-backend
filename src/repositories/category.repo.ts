@@ -10,25 +10,32 @@ export class CategoryRepo {
     limit,
     offset,
     search,
+    shopid,
   }: {
     limit: number;
     offset: number;
     search: string;
+    shopid: string;
   }) {
     let where = "WHERE 1=1";
     let values = [];
     let index = 1;
 
     if (search) {
-      where += ` AND name ILIKE $${index}`;
+      where += ` AND c.name ILIKE $${index}`;
       values.push(`%${search}%`);
       index++;
+    }
+
+    if (shopid) {
+      where += ` AND c.shop_id = $${index++}`;
+      values.push(shopid);
     }
 
     const countQuery = {
       text: `
             SELECT COUNT(*) as count
-            FROM categories
+            FROM categories as c
             ${where}
             `,
       values: [...values],
