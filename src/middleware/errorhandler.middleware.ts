@@ -37,10 +37,10 @@ function isPgError(err: unknown): err is PgLikeError {
   );
 }
 
-function isRedisError(err: unknown): err is Error {
-  return err instanceof Error &&
-    /redis|socket|ecconn|enotfound|timeout|auth|allowlist|url/i.test(err.message);
-}
+// function isRedisError(err: unknown): err is Error {
+//   return err instanceof Error &&
+//     /redis|socket|ecconn|enotfound|timeout|auth|allowlist|url/i.test(err.message);
+// }
 
 function handlePgError(res: Response, err: PgLikeError) {
   // unique_violation
@@ -223,19 +223,19 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     });
   }
 
-  if (isRedisError(err)) {
-    return res.status(500).json({
-      code: 500,
-      success: false,
-      error: {
-        type: "REDIS_ERROR",
-        message: "Unexpected redis error",
-        details: {
-          detail: err.message,
-        },
-      },
-    });
-  }
+  // if (isRedisError(err)) {
+  //   return res.status(500).json({
+  //     code: 500,
+  //     success: false,
+  //     error: {
+  //       type: "REDIS_ERROR",
+  //       message: "Unexpected redis error",
+  //       details: {
+  //         detail: err.message,
+  //       },
+  //     },
+  //   });
+  // }
 
   if (isPgError(err)) {
     return handlePgError(res, err);

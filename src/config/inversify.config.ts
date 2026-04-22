@@ -5,7 +5,10 @@ import { pool } from "./database";
 import { ProductRepo } from "../repositories/product.repo";
 import { ProductService } from "../services/product.service";
 import { AuthMiddle } from "../middleware/auth.middleware";
-import { CacheService } from "../services/cache.service";
+// import { CacheService } from "../services/cache.service";
+import { ShopRepo } from "../repositories/shop.repo";
+import { ShopService } from "../services/shop.service";
+// import { InvalidateCacheService } from "../services/invalidate_cache.service";
 
 export const container = new Container();
 
@@ -14,10 +17,15 @@ container.bind<Pool>(TYPES.DbPool).toConstantValue(pool); //bind key to object, 
 container.bind(AuthMiddle).toSelf().inSingletonScope(); //bind class
 
 //bind key to class
-container
-  .bind<CacheService>(TYPES.CacheService)
-  .to(CacheService)
-  .inSingletonScope();
+// container
+//   .bind<CacheService>(TYPES.CacheService)
+//   .to(CacheService)
+//   .inSingletonScope();
+// container
+//   .bind<InvalidateCacheService>(TYPES.InvalidateCacheService)
+//   .to(InvalidateCacheService)
+//   .inSingletonScope();
+
 container
   .bind<ProductRepo>(TYPES.ProductRepo)
   .to(ProductRepo)
@@ -25,4 +33,12 @@ container
 container
   .bind<ProductService>(TYPES.ProductService)
   .to(ProductService)
+  .inSingletonScope();
+container
+  .bind<ShopRepo>(TYPES.ShopRepo)
+  .to(ShopRepo)
+  .inSingletonScope();
+container
+  .bind<ShopService>(TYPES.ShopService)
+  .to(ShopService)
   .inSingletonScope();

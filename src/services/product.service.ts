@@ -3,7 +3,7 @@ import { TYPES } from "../types";
 import { ProductRepo } from "../repositories/product.repo";
 import { notFound } from "../errors/http.error";
 import z from "zod";
-import { CacheService } from "./cache.service";
+// import { CacheService } from "./cache.service";
 import { CACHE_KEYS } from "../constants/cache.keys";
 import { createProductSchema, updateProductSchema } from "../schema/product.schema";
 
@@ -12,8 +12,8 @@ export class ProductService {
   constructor(
     @inject(TYPES.ProductRepo)
     private repo: ProductRepo,
-    @inject(TYPES.CacheService)
-    private cache: CacheService,
+    // @inject(TYPES.CacheService)
+    // private cache: CacheService,
   ) { }
 
   public async getProducts(query: any) {
@@ -30,42 +30,42 @@ export class ProductService {
     //   Object.entries(rawAttrs).map(([key, value]) => [key, this.normalizaAttrValue(value)])
     // );
 
-    let version = await this.cache.getString(CACHE_KEYS.PRODUCT_LIST_VERSION);
+    // let version = await this.cache.getString(CACHE_KEYS.PRODUCT_LIST_VERSION);
 
-    if (!version) {
-      await this.cache.setJson(CACHE_KEYS.PRODUCT_LIST_VERSION, 1, 60 * 60);
-      version = "1";
-    }
+    // if (!version) {
+    //   await this.cache.setJson(CACHE_KEYS.PRODUCT_LIST_VERSION, 1, 60 * 60);
+    //   version = "1";
+    // }
 
-    const cacheKey = CACHE_KEYS.productList(limit, page, search, version);
+    // const cacheKey = CACHE_KEYS.productList(limit, page, search, version);
 
-    const cached = await this.cache.getJson<any>(cacheKey);
+    // const cached = await this.cache.getJson<any>(cacheKey);
 
-    if (cached) {
-      // For Testing console for redis about
-      //   await this.cache.logCacheStats(cacheKey, version);
-      return cached;
-    }
+    // if (cached) {
+    //   // For Testing console for redis about
+    //   //   await this.cache.logCacheStats(cacheKey, version);
+    //   return cached;
+    // }
 
     const { list, total } = await this.repo.getProducts({ limit, offset, search });
 
     const response = { list, limit, page, total: Number(total) };
 
-    await this.cache.setJson(cacheKey, response, 60 * 60);
+    // await this.cache.setJson(cacheKey, response, 60 * 60);
 
     return response;
   }
 
   public async getProductById(id: any) {
 
-    const cacheKey = CACHE_KEYS.productDetail(id);
+    // const cacheKey = CACHE_KEYS.productDetail(id);
 
-    const cached = await this.cache.getJson<any>(cacheKey);
+    // const cached = await this.cache.getJson<any>(cacheKey);
 
-    if (cached) {
-      // await this.cache.logCacheStats(cacheKey);
-      return cached;
-    }
+    // if (cached) {
+    //   // await this.cache.logCacheStats(cacheKey);
+    //   return cached;
+    // }
 
     const product = await this.repo.getProductById(id);
 
@@ -73,7 +73,7 @@ export class ProductService {
       throw notFound("Product not found");
     }
 
-    await this.cache.setJson(cacheKey, product, 60 * 60);
+    // await this.cache.setJson(cacheKey, product, 60 * 60);
 
     return product;
   }
@@ -82,7 +82,7 @@ export class ProductService {
 
     await this.repo.createProduct(body);
 
-    await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
+    // await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
 
   }
 
@@ -92,7 +92,7 @@ export class ProductService {
       await this.repo.createProduct(product);
     }
 
-    await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION)
+    // await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION)
   }
 
   public async updateProduct(id: any, body: z.infer<typeof updateProductSchema>) {
@@ -106,10 +106,8 @@ export class ProductService {
 
     const updatedProduct = await this.repo.getProductById(id);
 
-    await this.cache.delete(CACHE_KEYS.productDetail(id));
-    await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
-
-    await this.cache.logCacheStats(CACHE_KEYS.productDetail(id));
+    // await this.cache.delete(CACHE_KEYS.productDetail(id));
+    // await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
 
     return updatedProduct;
   }
@@ -123,13 +121,13 @@ export class ProductService {
 
     await this.repo.deleteProduct(id);
 
-    await this.cache.delete(CACHE_KEYS.productDetail(id));
-    await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
+    // await this.cache.delete(CACHE_KEYS.productDetail(id));
+    // await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
 
   }
 
   public async invalidateCache() {
-    await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
+    // await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
   }
 
   private normalizaAttrValue(value: any) {

@@ -4,7 +4,7 @@ import { Pool } from "pg";
 
 @injectable()
 export class ProductRepo {
-  constructor(@inject(TYPES.DbPool) private db: Pool) {}
+  constructor(@inject(TYPES.DbPool) private db: Pool) { }
 
   public async getProducts(params: any) {
     const { limit, offset, search, attrs } = params;
@@ -51,6 +51,15 @@ export class ProductRepo {
             p.base_price::float8 as "basePrice",
             p.inactive as inactive,
             p.created_at as "createdAt",
+            p.created_at as createdat,
+            jsonb_build_object(
+                'id', s.id,
+                'name', s.name,
+                'address', s.address,
+                'shopPhone', s.shop_phone,
+                'status', s.status,
+                'createdAt', s.created_at
+            ) as shop,
             COALESCE(
                 jsonb_agg(
                     jsonb_build_object(
@@ -66,8 +75,9 @@ export class ProductRepo {
             ) AS variants
             FROM products p
             LEFT JOIN productvariants v on v.product_id = p.id
+            LEFT JOIN shops s on s.id = p.shop_id
             ${where}
-            GROUP BY p.id
+            GROUP BY p.id, s.id
             ORDER BY p.created_at DESC
             LIMIT $${limitIndex}
             OFFSET $${offsetIndex}
@@ -92,6 +102,14 @@ export class ProductRepo {
             p.base_price::float8 as "basePrice",
             p.inactive as inactive,
             p.created_at as "createdAt",
+            jsonb_build_object(
+                'id', s.id,
+                'name', s.name,
+                'address', s.address,
+                'shopPhone', s.shop_phone,
+                'status', s.status,
+                'createdAt', s.created_at
+            ) as shop,
             COALESCE(
                 jsonb_agg(
                     jsonb_build_object(
@@ -107,8 +125,9 @@ export class ProductRepo {
             ) AS variants
             FROM products p
             LEFT JOIN productvariants v on v.product_id = p.id
+            LEFT JOIN shops s on s.id = p.shop_id
             WHERE p.id = $1
-            GROUP BY p.id
+            GROUP BY p.id, s.id
             `,
       values: [id],
     };
@@ -126,11 +145,11 @@ export class ProductRepo {
 
       const productRes = await client.query(
         `
-      INSERT INTO products (name, base_price, inactive, created_at, updated_at)
-      VALUES ($1, $2, $3, now(), now())
-      RETURNING id, name, base_price, inactive, created_at, updated_at
+      INSERT INTO products (name, shop_id, base_price, inactive, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, now(), now())
+      RETURNING id, name, shop_id, base_price, inactive, created_at, updated_at
       `,
-        [body.name, body.basePrice, body.inactive],
+        [body.name, body.shopId, body.basePrice, body.inactive],
       );
 
       const product = productRes.rows[0];
@@ -185,11 +204,11 @@ export class ProductRepo {
       const productRes = await client.query(
         `
       UPDATE products
-      SET name = $1, base_price = $2, inactive = $3, updated_at = now()
-      WHERE id = $4
-      RETURNING id, name, base_price, inactive, created_at, updated_at
+      SET name = $1, shop_id = $2, base_price = $3, inactive = $4, updated_at = now()
+      WHERE id = $5
+      RETURNING id, name, shop_id, base_price, inactive, created_at, updated_at
       `,
-        [body.name, body.basePrice, body.inactive, id],
+        [body.name, body.shopId, body.basePrice, body.inactive, id],
       );
 
       const product = productRes.rows[0];

@@ -1,2 +1,3 @@
 import "./product.controller";
-import "./variant.controller";
+import "./shop.controller";
+import "./invalidate_cache.controller";
