@@ -48,10 +48,7 @@ export class ShopRepo {
 
     public async getShopById(id: any) {
         const query = `
-            SELECT *,
-            shop_phone as "shopPhone",
-            created_at as "createdAt",
-            updated_at as "updatedAt"
+            SELECT *
             FROM shops
             WHERE id = $1
         `;
@@ -82,19 +79,19 @@ export class ShopRepo {
         const query = `
             UPDATE shops
             SET name = $1,
-                address = $2,
-                shop_phone = $3,
-                status = $4,
+                phone = $2,
+                status = $3,
+                owner_id = $4,
                 updated_at = now()
             WHERE id = $5
-            RETURNING id, name, address, shop_phone as "shopPhone", status, created_at as "createdAt", updated_at as "updatedAt"
+            RETURNING id, owner_id, name, phone, status, created_at as "createdAt", updated_at as "updatedAt"
         `;
 
         const { rows } = await this.db.query(query, [
             body.name,
-            body.address,
-            body.shopPhone,
+            body.phone,
             body.status,
+            body.ownerid,
             id
         ]);
 
