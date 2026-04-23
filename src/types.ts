@@ -1,17 +1,16 @@
 export const TYPES = {
+  DbPool: Symbol.for("DbPool"),
 
-    DbPool: Symbol.for("DbPool"),
+  // CacheService: Symbol.for("CacheService"),
 
-    // CacheService: Symbol.for("CacheService"),
+  // InvalidateCacheService: Symbol.for("InvalidateCacheService"),
 
-    // InvalidateCacheService: Symbol.for("InvalidateCacheService"),
+  ShopRepo: Symbol.for("ShopRepo"),
+  ShopService: Symbol.for("ShopService"),
 
-    ProductRepo: Symbol.for("ProductRepo"),
-    ProductService: Symbol.for("ProductService"),
+  CategoryRepo: Symbol.for("CategoryRepo"),
+  CategoryService: Symbol.for("CategoryService"),
 
-    ShopRepo: Symbol.for("ShopRepo"),
-    ShopService: Symbol.for("ShopService"),
-
-    CategoryRepo: Symbol.for("CategoryRepo"),
-    CategoryService: Symbol.for("CategoryService")
-}
+  ProductRepo: Symbol.for("ProductRepo"),
+  ProductService: Symbol.for("ProductService"),
+};

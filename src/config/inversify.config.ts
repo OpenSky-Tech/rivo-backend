@@ -28,21 +28,8 @@ container.bind(AuthMiddle).toSelf().inSingletonScope(); //bind class
 //   .to(InvalidateCacheService)
 //   .inSingletonScope();
 
-//Product
-container
-  .bind<ProductRepo>(TYPES.ProductRepo)
-  .to(ProductRepo)
-  .inSingletonScope();
-container
-  .bind<ProductService>(TYPES.ProductService)
-  .to(ProductService)
-  .inSingletonScope();
-
 //Shop
-container
-  .bind<ShopRepo>(TYPES.ShopRepo)
-  .to(ShopRepo)
-  .inSingletonScope();
+container.bind<ShopRepo>(TYPES.ShopRepo).to(ShopRepo).inSingletonScope();
 container
   .bind<ShopService>(TYPES.ShopService)
   .to(ShopService)
@@ -56,4 +43,14 @@ container
 container
   .bind<CategoryService>(TYPES.CategoryService)
   .to(CategoryService)
+  .inSingletonScope();
+
+//Product
+container
+  .bind<ProductRepo>(TYPES.ProductRepo)
+  .to(ProductRepo)
+  .inSingletonScope();
+container
+  .bind<ProductService>(TYPES.ProductService)
+  .to(ProductService)
   .inSingletonScope();

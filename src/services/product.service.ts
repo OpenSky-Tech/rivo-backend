@@ -5,7 +5,10 @@ import { notFound } from "../errors/http.error";
 import z from "zod";
 // import { CacheService } from "./cache.service";
 import { CACHE_KEYS } from "../constants/cache.keys";
-import { createProductSchema, updateProductSchema } from "../schema/product.schema";
+import {
+  createProductSchema,
+  updateProductSchema,
+} from "../schema/product.schema";
 
 @injectable()
 export class ProductService {
@@ -14,15 +17,18 @@ export class ProductService {
     private repo: ProductRepo,
     // @inject(TYPES.CacheService)
     // private cache: CacheService,
-  ) { }
+  ) {}
 
   public async getProducts(query: any) {
-
     const limit = Number(query.limit) || 5;
     const page = Number(query.page) || 1;
     const offset = (page - 1) * limit;
 
     const search = (query.search || "").trim();
+
+    const shopid = query.shopid;
+
+    const categoryid = query.categoryid;
 
     // const { limit: _l, offset: _o, search: _s, page: _p, ...rawAttrs } = query;
 
@@ -47,7 +53,13 @@ export class ProductService {
     //   return cached;
     // }
 
-    const { list, total } = await this.repo.getProducts({ limit, offset, search });
+    const { list, total } = await this.repo.getProducts({
+      limit,
+      offset,
+      search,
+      shopid,
+      categoryid,
+    });
 
     const response = { list, limit, page, total: Number(total) };
 
@@ -57,7 +69,6 @@ export class ProductService {
   }
 
   public async getProductById(id: any) {
-
     // const cacheKey = CACHE_KEYS.productDetail(id);
 
     // const cached = await this.cache.getJson<any>(cacheKey);
@@ -79,15 +90,17 @@ export class ProductService {
   }
 
   public async createProduct(body: z.infer<typeof createProductSchema>) {
+    const { id } = await this.repo.createProduct(body);
 
-    await this.repo.createProduct(body);
+    const createdProduct = await this.repo.getProductById(id);
 
     // await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
-
+    return createdProduct;
   }
 
-  public async createBulkProduct(products: z.infer<typeof createProductSchema>[]) {
-
+  public async createBulkProduct(
+    products: z.infer<typeof createProductSchema>[],
+  ) {
     for (const product of products) {
       await this.repo.createProduct(product);
     }
@@ -95,7 +108,10 @@ export class ProductService {
     // await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION)
   }
 
-  public async updateProduct(id: any, body: z.infer<typeof updateProductSchema>) {
+  public async updateProduct(
+    id: any,
+    body: z.infer<typeof updateProductSchema>,
+  ) {
     const exists = await this.repo.getProductById(id);
 
     if (!exists) {
@@ -123,7 +139,6 @@ export class ProductService {
 
     // await this.cache.delete(CACHE_KEYS.productDetail(id));
     // await this.cache.incr(CACHE_KEYS.PRODUCT_LIST_VERSION);
-
   }
 
   public async invalidateCache() {

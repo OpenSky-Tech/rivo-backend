@@ -13,16 +13,26 @@ import { ProductService } from "../services/product.service";
 import { Request, Response } from "express";
 import { AuthMiddle } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
-import { createBulkProductSchema, createProductSchema, updateProductSchema } from "../schema/product.schema";
+import {
+  createBulkProductSchema,
+  createProductSchema,
+  updateProductSchema,
+} from "../schema/product.schema";
 import z from "zod";
-import { created, deleted, ok, paginated, updated } from "../util/api-response.util";
+import {
+  created,
+  deleted,
+  ok,
+  paginated,
+  updated,
+} from "../util/api-response.util";
 
 @controller("/product")
 export class ProductController {
   constructor(
     @inject(TYPES.ProductService)
     private service: ProductService,
-  ) { }
+  ) {}
 
   @httpGet("/get")
   public async getProduct(@request() req: Request, @response() res: Response) {
@@ -35,7 +45,10 @@ export class ProductController {
   }
 
   @httpGet("/get/:id")
-  public async getProductById(@request() req: Request, @response() res: Response) {
+  public async getProductById(
+    @request() req: Request,
+    @response() res: Response,
+  ) {
     const user = res.locals.user;
     const params = req.params;
 
@@ -53,27 +66,27 @@ export class ProductController {
 
     const dto = req.body as z.infer<typeof createProductSchema>;
 
-    await this.service.createProduct(dto);
+    const createdProduct = await this.service.createProduct(dto);
 
-    return created(res, {}, "Product created successfully");
+    return created(res, createdProduct);
   }
 
   @httpPost("/create-bulk", validate({ body: createBulkProductSchema }))
-  public async createBulk(
-    @request() req: Request,
-    @response() res: Response
-  ) {
+  public async createBulk(@request() req: Request, @response() res: Response) {
     const user = res.locals.user;
 
     const dto = req.body as z.infer<typeof createBulkProductSchema>;
 
     await this.service.createBulkProduct(dto.products);
 
-    return created(res, {}, "Multiple products created successfully")
+    return created(res, {}, "Multiple products created successfully");
   }
 
   @httpPost("/invalidate-cache")
-  public async invalidateCache(@request() req: Request, @response() res: Response) {
+  public async invalidateCache(
+    @request() req: Request,
+    @response() res: Response,
+  ) {
     const user = res.locals.user;
 
     await this.service.invalidateCache();
@@ -82,7 +95,10 @@ export class ProductController {
   }
 
   @httpPut("/update/:id", validate({ body: updateProductSchema }))
-  public async updateProduct(@request() req: Request, @response() res: Response) {
+  public async updateProduct(
+    @request() req: Request,
+    @response() res: Response,
+  ) {
     const user = res.locals.user;
     const params = req.params;
     const body = req.body as z.infer<typeof updateProductSchema>;
@@ -93,7 +109,10 @@ export class ProductController {
   }
 
   @httpDelete("/delete/:id")
-  public async deleteProduct(@request() req: Request, @response() res: Response) {
+  public async deleteProduct(
+    @request() req: Request,
+    @response() res: Response,
+  ) {
     const user = res.locals.user;
     const params = req.params;
 

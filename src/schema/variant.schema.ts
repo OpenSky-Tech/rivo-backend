@@ -8,8 +8,8 @@ const attrKeySchema = z
 
 const attrValueSchema = z.union([
   z.string().trim(),
-  z.coerce.number(),
-  z.coerce.boolean(),
+  z.number(),
+  z.boolean(),
   z.null(),
 ]);
 
@@ -20,7 +20,7 @@ export const createVariantSchema = z
     sku: z.string().trim().min(1, "SKU is required").max(50, "SKU too long"),
     barcode: z.string().trim().optional().nullable(),
     stock: z.coerce.number().int().nonnegative().default(0),
-    basePrice: z.coerce.number().nonnegative(),
+    price: z.coerce.number().nonnegative(),
     attrs: attrsSchema.default({}),
   })
   .strict();
