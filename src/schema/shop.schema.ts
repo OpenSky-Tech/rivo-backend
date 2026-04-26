@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createShopSchema = z.object({
-    ownerid: z.string().uuid("Invalid ownerid"),
+    ownerid: z.string().uuid("Invalid ownerid").optional().nullable(),
     name: z.string().trim().min(1, "Name is required").max(256),
     // address: z.string().trim().optional().nullable(),
     phone: z.string().trim().max(30, "Phone is too long").optional().nullable(),

@@ -7,15 +7,15 @@ export class ProductRepo {
   constructor(@inject(TYPES.DbPool) private db: Pool) {}
 
   public async getProducts(params: any) {
-    const { limit, offset, search, attrs, shopid, categoryid } = params;
+    const { limit, offset, name, attrs, shopid, categoryid } = params;
 
     let where = "WHERE 1=1";
     let values = [];
     let index = 1;
 
-    if (search) {
+    if (name) {
       where += ` AND p.name ILIKE $${index}`;
-      values.push(`%${search}%`);
+      values.push(`%${name}%`);
       index++;
     }
 
@@ -167,6 +167,47 @@ export class ProductRepo {
     const res = await this.db.query(query);
 
     return res.rows[0];
+  }
+
+  public async checkProductSKU(params: any) {
+    const { shopid, sku, variantid } = params;
+
+    const values: any[] = [shopid, sku.trim()];
+    let index = 3;
+
+    let where = `
+      WHERE p.shop_id = $1
+        AND LOWER(TRIM(pv.sku)) = LOWER(TRIM($2))
+    `;
+
+    if (variantid) {
+      where += ` AND pv.id != $${index++}`;
+      values.push(variantid);
+    }
+
+    const query = {
+      text: `
+            SELECT
+            pv.id AS variantid,
+            pv.sku,
+            pv.product_id AS productid,
+            p.name AS productname
+            FROM
+            product_variants pv
+            INNER JOIN products p
+              ON pv.product_id = p.id
+            ${where}
+            LIMIT 1
+            `,
+      values: values,
+    };
+
+    const result = await this.db.query(query);
+
+    return {
+      exists: (result.rowCount ?? 0) > 0,
+      data: result.rows[0] || null,
+    };
   }
 
   public async createProduct(body: any) {

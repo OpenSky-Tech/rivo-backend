@@ -3,98 +3,121 @@ import { Response } from "express";
 type Meta = Record<string, unknown>;
 
 export function success<T>(
-    res: Response,
-    options: {
-        code?: number,
-        message?: string,
-        data?: T;
-        meta?: Meta
-    }
+  res: Response,
+  options: {
+    code?: number;
+    message?: string;
+    data?: T;
+    meta?: Meta;
+  },
 ) {
-    const {
-        code = 200,
-        message = "Success",
-        data,
-        meta
-    } = options
+  const { code = 200, message = "Success", data, meta } = options;
 
-    return res.status(code).json({
-        code,
-        success: true,
-        message,
-        ...(meta ? { meta } : {}),
-        ...(data !== undefined ? { data } : {}),
-    })
+  return res.status(code).json({
+    code,
+    success: true,
+    message,
+    ...(meta ? { meta } : {}),
+    ...(data !== undefined ? { data } : {}),
+  });
 }
 
 export function ok<T>(
-    res: Response,
-    data?: T,
-    message = "Success",
-    meta?: Meta
+  res: Response,
+  data?: T,
+  message = "Success",
+  meta?: Meta,
 ) {
-    return success(res, { code: 200, message, data, meta })
+  return success(res, { code: 200, message, data, meta });
 }
 
 export function created<T>(
-    res: Response,
-    data?: T,
-    message = "Created successfully",
-    meta?: Meta
+  res: Response,
+  data?: T,
+  message = "Created successfully",
+  meta?: Meta,
 ) {
-    return success(res, { code: 201, message, data, meta })
+  return success(res, { code: 201, message, data, meta });
 }
 
 export function updated<T>(
-    res: Response,
-    data?: T,
-    message = "Updated successfully",
-    meta?: Meta
+  res: Response,
+  data?: T,
+  message = "Updated successfully",
+  meta?: Meta,
 ) {
-    return success(res, { code: 200, message, data, meta })
+  return success(res, { code: 200, message, data, meta });
 }
 
 export function accepted<T>(
-    res: Response,
-    data?: T,
-    message = "Accepted",
-    meta?: Meta
+  res: Response,
+  data?: T,
+  message = "Accepted",
+  meta?: Meta,
 ) {
-    return success(res, { code: 202, message, data, meta })
+  return success(res, { code: 202, message, data, meta });
 }
 
-export function deleted<T>(
-    res: Response,
-    message = "Deleted successfully",
+export function deleted<T>(res: Response, message = "Deleted successfully") {
+  return success(res, { code: 200, message });
+}
+
+export function duplicateCheck<T>(
+  res: Response,
+  options: {
+    duplicate: boolean;
+    item?: T | null;
+    field?: string;
+    value?: string | number | null;
+    message?: string;
+  },
 ) {
-    return success(res, { code: 200, message })
+  const {
+    duplicate,
+    item = null,
+    field,
+    value,
+    message = duplicate ? "Already exists" : "Available",
+  } = options;
+
+  return success(res, {
+    code: 200,
+    message,
+    data: {
+      duplicate,
+      item,
+      ...(field ? { field } : {}),
+      ...(value !== undefined && value !== null ? { value } : {}),
+    },
+  });
 }
 
 export function noContent(res: Response) {
-    return res.status(204).send();
+  return res.status(204).send();
 }
 
 export function paginated<T>(
-    res: Response,
-    data: T,
-    params: {
-        page: number,
-        limit: number;
-        total: number
-    },
-    message = "Success"
+  res: Response,
+  data: T,
+  params: {
+    page: number;
+    limit: number;
+    total: number;
+  },
+  message = "Success",
 ) {
-    const totalPages = params.limit > 0 ? Math.ceil(params.total / params.limit) : 0;
+  const totalPages =
+    params.limit > 0 ? Math.ceil(params.total / params.limit) : 0;
 
-    return success(res, {
-        code: 200,
-        message,
-        data,
-        meta: {
-            page: params.page,
-            limit: params.limit,
-            total: params.total,
-            totalPages
-        }
-    })
+  return success(res, {
+    code: 200,
+    message,
+    data,
+    meta: {
+      page: params.page,
+      limit: params.limit,
+      total: params.total,
+      totalPages,
+    },
+  });
 }

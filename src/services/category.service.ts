@@ -21,7 +21,7 @@ export class CategoryService {
         const page = Number(query.page) || 1;
         const offset = (page - 1) * limit;
 
-        const search = (query.search || "").trim();
+        const name = (query.name || "").trim();
 
         const shopid = (query.shopid);
 
@@ -40,7 +40,7 @@ export class CategoryService {
         //     return cached;
         // }
 
-        const { list, total } = await this.repo.getCategories({ limit, offset, search, shopid });
+        const { list, total } = await this.repo.getCategories({ limit, offset, name, shopid });
 
         const response = { list, limit, page, total: Number(total) };
 

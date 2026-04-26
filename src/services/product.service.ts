@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../types";
 import { ProductRepo } from "../repositories/product.repo";
-import { notFound } from "../errors/http.error";
+import { badRequest, notFound } from "../errors/http.error";
 import z from "zod";
 // import { CacheService } from "./cache.service";
 import { CACHE_KEYS } from "../constants/cache.keys";
@@ -24,7 +24,7 @@ export class ProductService {
     const page = Number(query.page) || 1;
     const offset = (page - 1) * limit;
 
-    const search = (query.search || "").trim();
+    const name = (query.name || "").trim();
 
     const shopid = query.shopid;
 
@@ -56,7 +56,7 @@ export class ProductService {
     const { list, total } = await this.repo.getProducts({
       limit,
       offset,
-      search,
+      name,
       shopid,
       categoryid,
     });
@@ -66,6 +66,29 @@ export class ProductService {
     // await this.cache.setJson(cacheKey, response, 60 * 60);
 
     return response;
+  }
+
+  public async checkProductSKU(query: any) {
+    const shopid = query.shopid;
+    const sku = query.sku?.toString().trim();
+    const variantid = query.variantid;
+
+    if (!shopid || !sku) {
+      throw badRequest("shopid and sku are required");
+    }
+
+    const result = await this.repo.checkProductSKU({
+      shopid,
+      sku,
+      variantid,
+    });
+
+    return {
+      duplicate: result.exists,
+      item: result.data,
+      value: sku,
+      message: result.exists ? "Already exists" : "Available",
+    };
   }
 
   public async getProductById(id: any) {

@@ -6,24 +6,16 @@ import { Pool } from "pg";
 export class CategoryRepo {
   constructor(@inject(TYPES.DbPool) private db: Pool) {}
 
-  public async getCategories({
-    limit,
-    offset,
-    search,
-    shopid,
-  }: {
-    limit: number;
-    offset: number;
-    search: string;
-    shopid: string;
-  }) {
+  public async getCategories(params: any) {
+    const { limit, offset, name, shopid } = params;
+
     let where = "WHERE 1=1";
     let values = [];
     let index = 1;
 
-    if (search) {
+    if (name) {
       where += ` AND c.name ILIKE $${index}`;
-      values.push(`%${search}%`);
+      values.push(`%${name}%`);
       index++;
     }
 

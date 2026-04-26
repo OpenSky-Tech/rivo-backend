@@ -22,6 +22,7 @@ import z from "zod";
 import {
   created,
   deleted,
+  duplicateCheck,
   ok,
   paginated,
   updated,
@@ -42,6 +43,25 @@ export class ProductController {
     const { list, total, limit, page } = await this.service.getProducts(query);
 
     return paginated(res, list, { page, limit, total });
+  }
+
+  @httpGet("/check-sku")
+  public async checkProductSKU(
+    @request() req: Request,
+    @response() res: Response,
+  ) {
+    const user = res.locals.user;
+    const query = req.query;
+
+    const result = await this.service.checkProductSKU(query);
+
+    return duplicateCheck(res, {
+      duplicate: result.duplicate,
+      item: result.item,
+      field: "sku",
+      value: result.value,
+      message: result.message
+    });
   }
 
   @httpGet("/get/:id")
