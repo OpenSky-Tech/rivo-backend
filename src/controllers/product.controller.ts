@@ -28,13 +28,105 @@ import {
   updated,
 } from "../util/api-response.util";
 
+/**
+ * @swagger
+ * tags:
+ *   name: Products
+ *   description: Product management endpoints
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Product:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "clx123abc"
+ *         name:
+ *           type: string
+ *           example: "Sample Product"
+ *         sku:
+ *           type: string
+ *           example: "SKU-001"
+ *         price:
+ *           type: number
+ *           example: 29.99
+ *         stock:
+ *           type: integer
+ *           example: 100
+ *     CreateProductDto:
+ *       type: object
+ *       required:
+ *         - name
+ *         - sku
+ *         - price
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: "Sample Product"
+ *         sku:
+ *           type: string
+ *           example: "SKU-001"
+ *         price:
+ *           type: number
+ *           example: 29.99
+ *         stock:
+ *           type: integer
+ *           example: 100
+ */
+
 @controller("/product")
 export class ProductController {
   constructor(
     @inject(TYPES.ProductService)
     private service: ProductService,
-  ) {}
+  ) { }
 
+  /**
+   * @swagger
+   * /product/get:
+   *   get:
+   *     summary: List products (paginated)
+   *     tags: [Products]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           default: 1
+   *         description: Page number
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           default: 20
+   *         description: Items per page
+   *     responses:
+   *       200:
+   *         description: Paginated list of products
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 data:
+   *                   type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/Product'
+   *                 page:
+   *                   type: integer
+   *                 limit:
+   *                   type: integer
+   *                 total:
+   *                   type: integer
+   *       401:
+   *         description: Unauthorized
+   */
   @httpGet("/get")
   public async getProduct(@request() req: Request, @response() res: Response) {
     const user = res.locals.user;
