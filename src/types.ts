@@ -5,6 +5,12 @@ export const TYPES = {
 
   // InvalidateCacheService: Symbol.for("InvalidateCacheService"),
 
+  RoleRepo: Symbol.for("RoleRepo"),
+  RoleService: Symbol.for("RoleService"),
+
+  PermissionRepo: Symbol.for("PermissionRepo"),
+  PermissionService: Symbol.for("PermissionService"),
+
   ShopRepo: Symbol.for("ShopRepo"),
   ShopService: Symbol.for("ShopService"),
 

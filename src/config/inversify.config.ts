@@ -10,6 +10,10 @@ import { ShopRepo } from "../repositories/shop.repo";
 import { ShopService } from "../services/shop.service";
 import { CategoryRepo } from "../repositories/category.repo";
 import { CategoryService } from "../services/category.service";
+import { PermissionRepo } from "../repositories/permission.repo";
+import { PermissionService } from "../services/permission.service";
+import { RoleRepo } from "../repositories/role.repo";
+import { RoleService } from "../services/role.service";
 // import { InvalidateCacheService } from "../services/invalidate_cache.service";
 
 export const container = new Container();
@@ -35,6 +39,27 @@ container
   .to(ShopService)
   .inSingletonScope();
 
+
+//Role
+container
+  .bind<RoleRepo>(TYPES.RoleRepo)
+  .to(RoleRepo)
+  .inSingletonScope();
+container
+  .bind<RoleService>(TYPES.RoleService)
+  .to(RoleService)
+  .inSingletonScope();
+
+//Permission
+container
+  .bind<PermissionRepo>(TYPES.PermissionRepo)
+  .to(PermissionRepo)
+  .inSingletonScope();
+container
+  .bind<PermissionService>(TYPES.PermissionService)
+  .to(PermissionService)
+  .inSingletonScope();
+  
 //Category
 container
   .bind<CategoryRepo>(TYPES.CategoryRepo)
