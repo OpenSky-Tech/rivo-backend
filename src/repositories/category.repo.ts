@@ -116,13 +116,30 @@ export class CategoryRepo {
     await this.db.query(query, [id]);
   }
 
-  public async shopInUse(id: any) {
+  public async categoryInUse(id: any) {
     const query = `
-            SELECT * FROM products
-            WHERE shop_id = $1
+            SELECT id FROM products
+            WHERE category_id = $1
+            LIMIT 1
         `;
 
     const { rows } = await this.db.query(query, [id]);
+
+    return rows.length > 0;
+  }
+
+  public async hasChildCategories(id: any) {
+    const query = {
+      text: `
+      SELECT id
+      FROM categories
+      WHERE parent_id = $1
+      LIMIT 1
+    `,
+      values: [id],
+    };
+
+    const { rows } = await this.db.query(query);
 
     return rows.length > 0;
   }

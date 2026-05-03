@@ -3,7 +3,7 @@ import { TYPES } from "../types";
 import z from "zod";
 import { RoleRepo } from "../repositories/role.repo";
 import { createRoleSchema, updateRoleSchema } from "../schema/role.schema";
-import { notFound } from "../errors/http.error";
+import { badRequest, notFound } from "../errors/http.error";
 
 @injectable()
 export class RoleService {
@@ -12,29 +12,29 @@ export class RoleService {
     private repo: RoleRepo,
   ) {}
 
-    public async getRolesSimple(query: any) {
-      const forView = query.forView === true;
+  public async getRolesSimple(query: any) {
+    const forView = query.forView === true;
 
-      const limit = Number(query.limit) || 5;
-      const page = Number(query.page) || 1;
-      const offset = (page - 1) * limit;
+    const limit = Number(query.limit) || 5;
+    const page = Number(query.page) || 1;
+    const offset = (page - 1) * limit;
 
-      const name = (query.name || "").trim();
+    const name = (query.name || "").trim();
 
-      const shopid = query.shopid;
+    const shopid = query.shopid;
 
-      const { list, total } = await this.repo.getRolesSimple({
-        limit,
-        offset,
-        name,
-        shopid,
-        forView,
-      });
+    const { list, total } = await this.repo.getRolesSimple({
+      limit,
+      offset,
+      name,
+      shopid,
+      forView,
+    });
 
-      const response = { list, limit, page, total: Number(total), forView };
+    const response = { list, limit, page, total: Number(total), forView };
 
-      return response;
-    }
+    return response;
+  }
 
   public async getRoles(query: any) {
     const limit = Number(query.limit) || 100;
@@ -65,14 +65,14 @@ export class RoleService {
 
   public async getRolesById(id: any, query: any) {
     if (!id) {
-      throw new Error("Role id is required");
+      throw badRequest("Role id is required");
     }
 
     const shopid = query.shopid;
 
-    if (!shopid) {
-      throw notFound("shopid is required");
-    }
+    // if (!shopid) {
+    //   throw badRequest("shopid is required");
+    // }
 
     return await this.repo.getRoleById(id, shopid);
   }
@@ -93,22 +93,27 @@ export class RoleService {
     return updated;
   }
 
-  // public async deleteCategory(id: any) {
-  //     const exists = await this.repo.getCategoryById(id);
+  public async deleteRole(id: any, shopid: any) {
+    if (!id) {
+      throw badRequest("Role id is required");
+    }
 
-  //     if (!exists) {
-  //         throw notFound("Category not found");
-  //     }
+    if (!shopid) {
+      throw badRequest("shopid is required");
+    }
 
-  //     const inUse = await this.repo.shopInUse(id);
+    const exists = await this.repo.getRoleById(id, shopid);
 
-  //     if (inUse) {
-  //         throw badRequest("Category is in use");
-  //     }
+    if (!exists) {
+      throw notFound("Role not found");
+    }
 
-  //     await this.repo.deleteCategory(id);
+    const inUse = await this.repo.roleCheckInShop(id, shopid);
 
-  //     // await this.cache.delete(CACHE_KEYS.shopDetail(id));
-  //     // await this.cache.incr(CACHE_KEYS.SHOP_LIST_VERSION);
-  // }
+    if (inUse) {
+      throw badRequest("Role is in use");
+    }
+
+    await this.repo.deleteRole(id, shopid);
+  }
 }

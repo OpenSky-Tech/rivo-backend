@@ -30,20 +30,23 @@ export class RoleController {
     private service: RoleService,
   ) {}
 
-    @httpGet("/get/simple")
-    public async getRolesSimple(@request() req: Request, @response() res: Response) {
-      const user = res.locals.user;
-      const query = req.query;
+  @httpGet("/get/simple")
+  public async getRolesSimple(
+    @request() req: Request,
+    @response() res: Response,
+  ) {
+    const user = res.locals.user;
+    const query = req.query;
 
-      const { list, total, limit, page, forView } =
-        await this.service.getRolesSimple(query);
+    const { list, total, limit, page, forView } =
+      await this.service.getRolesSimple(query);
 
-      if (!forView) {
-        return ok(res, list);
-      }
-
-      return paginated(res, list, { page, limit, total });
+    if (!forView) {
+      return ok(res, list);
     }
+
+    return paginated(res, list, { page, limit, total });
+  }
 
   @httpGet("/get")
   public async getRoles(@request() req: Request, @response() res: Response) {
@@ -76,10 +79,7 @@ export class RoleController {
   }
 
   @httpPut("/update/:id", validate({ body: updateRoleSchema }))
-  public async updateRole(
-    @request() req: Request,
-    @response() res: Response,
-  ) {
+  public async updateRole(@request() req: Request, @response() res: Response) {
     const user = res.locals.user;
     const params = req.params;
     const body = req.body as z.infer<typeof updateRoleSchema>;
@@ -89,16 +89,14 @@ export class RoleController {
     return updated(res, updatedCategory);
   }
 
-  //   @httpDelete("/delete/:id")
-  //   public async deleteCategory(
-  //     @request() req: Request,
-  //     @response() res: Response,
-  //   ) {
-  //     const user = res.locals.user;
-  //     const params = req.params;
+  @httpDelete("/delete/:id")
+  public async deleteRole(@request() req: Request, @response() res: Response) {
+    const user = res.locals.user;
+    const params = req.params;
+    const shopid = req.query.shopid;
 
-  //     await this.service.deleteCategory(params.id);
+    await this.service.deleteRole(params.id, shopid);
 
-  //     return deleted(res);
-  //   }
+    return deleted(res);
+  }
 }

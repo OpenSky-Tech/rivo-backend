@@ -7,52 +7,52 @@ import { notFound } from "../errors/http.error";
 export class RoleRepo {
   constructor(@inject(TYPES.DbPool) private db: Pool) {}
 
-    public async getRolesSimple(params: any) {
-      const { limit, offset, name, shopid, forView = false } = params;
+  public async getRolesSimple(params: any) {
+    const { limit, offset, name, shopid, forView = false } = params;
 
-      let where = "WHERE 1=1";
-      let values = [];
-      let index = 1;
+    let where = "WHERE 1=1";
+    let values = [];
+    let index = 1;
 
-      if (name) {
-        where += ` AND name ILIKE $${index++}`;
-        values.push(`%${name}%`);
-      }
+    if (name) {
+      where += ` AND name ILIKE $${index++}`;
+      values.push(`%${name}%`);
+    }
 
-      if (shopid) {
-        where += ` AND shop_id = $${index++}`;
-        values.push(shopid);
-      }
+    if (shopid) {
+      where += ` AND shop_id = $${index++}`;
+      values.push(shopid);
+    }
 
-      const countQuery = {
-        text: `
+    const countQuery = {
+      text: `
               SELECT COUNT(*) as count
               FROM roles
               ${where}
               `,
-        values: [...values],
-      };
+      values: [...values],
+    };
 
-      const countRes = await this.db.query(countQuery);
-      const count = Number(countRes.rows[0].count);
+    const countRes = await this.db.query(countQuery);
+    const count = Number(countRes.rows[0].count);
 
-      let paginationSql = "";
-      if (forView) {
-        paginationSql = `LIMIT $${index} OFFSET $${index + 1}`;
-        values.push(Number(limit), Number(offset));
-      }
+    let paginationSql = "";
+    if (forView) {
+      paginationSql = `LIMIT $${index} OFFSET $${index + 1}`;
+      values.push(Number(limit), Number(offset));
+    }
 
-      const query = `
+    const query = `
               SELECT *
               FROM roles
               ${where}
               ${paginationSql}
           `;
 
-      const { rows } = await this.db.query(query, [...values]);
+    const { rows } = await this.db.query(query, [...values]);
 
-      return { list: rows, total: count };
-    }
+    return { list: rows, total: count };
+  }
 
   public async getRoles(params: any) {
     const { limit, offset, name, shopid = null } = params;
@@ -327,23 +327,52 @@ export class RoleRepo {
     }
   }
 
-  //   public async deleteCategory(id: any) {
-  //     const query = `
-  //             DELETE FROM categories
-  //             WHERE id = $1
-  //         `;
+  public async deleteRole(id: any, shopid: any) {
+    const client = await this.db.connect();
 
-  //     await this.db.query(query, [id]);
-  //   }
+    try {
+      await client.query("BEGIN");
 
-  //   public async shopInUse(id: any) {
-  //     const query = `
-  //             SELECT * FROM products
-  //             WHERE shop_id = $1
-  //         `;
+      await client.query(
+        `
+        DELETE FROM role_permissions
+        WHERE role_id = $1
+        `,
+        [id],
+      );
 
-  //     const { rows } = await this.db.query(query, [id]);
+      await client.query(
+        `
+          DELETE FROM roles
+          WHERE id = $1
+          and shop_id = $2
+          `,
+        [id, shopid],
+      );
 
-  //     return rows.length > 0;
-  //   }
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  public async roleCheckInShop(id: any, shopid: any) {
+    const query = `
+              SELECT r.id
+              FROM roles r
+               JOIN user_roles ur on ur.role_id = r.id
+               JOIN shop_staff ss on ss.user_id = ur.user_id
+              WHERE r.shop_id = $1
+                AND r.id = $2
+                AND ss.shop_id = $1
+              LIMIT 1
+          `;
+
+    const { rows } = await this.db.query(query, [shopid, id]);
+
+    return rows.length > 0;
+  }
 }
